@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text Editor</title>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+  />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fefefe;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      display: flex;
+    }
+
+    .left-pane {
+      width: 50%;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .right-pane {
+      width: 50%;
+      padding: 10px;
+      border-left: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin: 20px 0;
+    }
+
+    .editor {
+      border: 1px solid #ccc;
+      padding: 10px;
+      min-height: 200px;
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 16px;
+      overflow-y: auto;
+      background-color: #ffffff; /* Default background color */
+      color: #000000; /* Default text color */
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      margin: 10px 0;
+      text-align: center;
+      width: 100%;
+    }
+
+    .toolbar button,
+    .toolbar select,
+    .toolbar input[type="color"],
+    .toolbar input[type="number"] {
+      margin: 5px;
+      border: 1px solid #ddd;
+      background: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 5px;
+      border-radius: 4px;
+    }
+
+    .toolbar button:hover {
+      background-color: #f0f0f0;
+    }
+
+    .list-buttons {
+      display: flex;
+      gap: 10px; /* Space between buttons */
+      margin: 5px; /* Optional margin around the container */
+    }
+
+    .code-display {
+      margin: 20px 0;
+      border: 1px solid #ccc;
+      padding: 10px;
+      background-color: #ffffff;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      height: 150px;
+      overflow-y: auto;
+      width: 100%;
+    }
+
+    .scrollable-table {
+      margin: 20px 0;
+      padding: 10px;
+      background-color: #ffffff;
+      width: 100%;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    table,
+    th,
+    td {
+      border: 1px solid #ddd;
+    }
+
+    th,
+    td {
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    .text-container {
+      margin-top: 20px;
+    }
+
+    .text-container div {
+      border: 1px solid #ddd;
+      padding: 5px;
+      margin-bottom: 5px;
+      background-color: #f9f9f9;
+      word-wrap: break-word;
+    }
+
+    .text-container div.selected {
+      border: 2px solid #007bff;
+    }
+  </style>
+</head>
+<body>
+  <div class="left-pane">
+    <h1>Simple Text Editor</h1>
+    <div class="toolbar">
+      <button onclick="formatText('bold')" title="Bold">
+        <i class="fas fa-bold"></i>
+      </button>
+      <button onclick="formatText('italic')" title="Italic">
+        <i class="fas fa-italic"></i>
+      </button>
+      <button onclick="formatText('underline')" title="Underline">
+        <i class="fas fa-underline"></i>
+      </button>
+      <button onclick="formatText('strikeThrough')" title="Strikethrough">
+        <i class="fas fa-strikethrough"></i>
+      </button>
+      <button onclick="formatText('justifyLeft')" title="Align Left">
+        <i class="fas fa-align-left"></i>
+      </button>
+      <button onclick="formatText('justifyCenter')" title="Align Center">
+        <i class="fas fa-align-center"></i>
+      </button>
+      <button onclick="formatText('justifyRight')" title="Align Right">
+        <i class="fas fa-align-right"></i>
+      </button>
+      <select id="fontSize" onchange="changeFontSize()">
+        <option value="12px">Small</option>
+        <option value="20px">Medium</option>
+        <option value="24px">Large</option>
+        <option value="32px">Extra Large</option>
+      </select>
+      <input
+        type="color"
+        id="colorPicker"
+        onchange="changeTextColor()"
+        title="Text Color"
+        value="#000000"
+      />
+      <input
+        type="color"
+        id="bgColorPicker"
+        onchange="changeBackgroundColor()"
+        title="Background Color"
+        value="#ffffff"
+      />
+      <input
+        type="color"
+        id="buttonColorPicker"
+        onchange="applyButtonColor()"
+        title="Button Color"
+        value="#ffffff"
+      />
+      <input
+        type="color"
+        id="pageBgColorPicker"
+        onchange="changePageBackgroundColor()"
+        title="Page Background Color"
+        value="#fefefe"
+      />
+      <input
+        type="number"
+        id="listItemCount"
+        min="1"
+        value="3"
+        title="Number of Items"
+        style="width: 50px"
+      />
+      <div class="list-buttons">
+        <button onclick="insertNumberedList()" title="Insert Numbered List">
+          <i class="fas fa-list-ol"></i>
+        </button>
+        <button onclick="insertBulletList()" title="Insert Bullet List">
+          <i class="fas fa-list-ul"></i>
+        </button>
+      </div>
+      <input
+        type="number"
+        id="rowCount"
+        min="1"
+        value="3"
+        title="Number of Rows"
+        style="width: 50px"
+      />
+      <input
+        type="number"
+        id="colCount"
+        min="1"
+        value="3"
+        title="Number of Columns"
+        style="width: 50px"
+      />
+      <button onclick="insertTable()" title="Insert Table">
+        <i class="fas fa-table"></i>
+      </button>
+    </div>
+    <div class="editor" contenteditable="true"></div>
+    <div class="scrollable-table">
+      <!-- You can insert your table content here -->
+    </div>
+    <p> HTML CODE</p>
+    <div class="code-display" id="codeDisplay">
+      
+    </div>
+  </div>
+  <div class="right-pane">
+    <button onclick="addText()" title="Add Text">
+      <i class="fas fa-plus"></i>
+    </button>
+    <button onclick="deleteSelectedText()" title="Delete Selected Text">
+      <i class="fas fa-trash-alt"></i>
+    </button>
+    <button onclick="undoLastAction()" title="Undo Last Action">
+      <i class="fas fa-undo"></i>
+    </button>
+    <div id="textContainer" class="text-container">
+      <!-- Added text divs will appear here -->
+    </div>
+  </div>
+
+  <script>
+    let selectedTextDiv = null;
+    let deletedDivs = []; // Array to keep track of deleted divs
+    let editorHistory = []; // Array to keep track of editor content history
+
+    function formatText(command, value = null) {
+      document.execCommand(command, false, value);
+    }
+
+    function changeFontSize() {
+      const fontSize = document.getElementById("fontSize").value;
+      document.execCommand("fontSize", false, "7"); // Use font size 7 as a placeholder
+      const spans = document.querySelectorAll(".editor span[style*='font-size']");
+      spans.forEach((span) => (span.style.fontSize = fontSize));
+    }
+
+    function changeTextColor() {
+      const color = document.getElementById("colorPicker").value;
+      document.execCommand("foreColor", false, color);
+    }
+
+    function changeBackgroundColor() {
+      const color = document.getElementById("bgColorPicker").value;
+      document.querySelector(".editor").style.backgroundColor = color;
+    }
+
+    function applyButtonColor() {
+      const color = document.getElementById("buttonColorPicker").value;
+      const buttons = document.querySelectorAll(".toolbar button");
+      buttons.forEach(button => {
+        button.style.backgroundColor = color;
+        button.style.color = getContrastingColor(color); // Optional: Adjust text color for readability
+      });
+    }
+
+    function changePageBackgroundColor() {
+      const color = document.getElementById("pageBgColorPicker").value;
+      document.body.style.backgroundColor = color;
+    }
+
+    function insertNumberedList() {
+      const count = document.getElementById("listItemCount").value;
+      let listHtml = '<ol>';
+      for (let i = 0; i < count; i++) {
+        listHtml += '<li>Item ' + (i + 1) + '</li>';
+      }
+      listHtml += '</ol>';
+      document.execCommand('insertHTML', false, listHtml);
+    }
+
+    function insertBulletList() {
+      const count = document.getElementById("listItemCount").value;
+      let listHtml = '<ul>';
+      for (let i = 0; i < count; i++) {
+        listHtml += '<li>Item ' + (i + 1) + '</li>';
+      }
+      listHtml += '</ul>';
+      document.execCommand('insertHTML', false, listHtml);
+    }
+
+    function insertTable() {
+      const rows = document.getElementById("rowCount").value;
+      const cols = document.getElementById("colCount").value;
+      let tableHtml = '<table><tbody>';
+      for (let i = 0; i < rows; i++) {
+        tableHtml += '<tr>';
+        for (let j = 0; j < cols; j++) {
+          tableHtml += '<td>Cell</td>';
+        }
+        tableHtml += '</tr>';
+      }
+      tableHtml += '</tbody></table>';
+      document.execCommand('insertHTML', false, tableHtml);
+    }
+
+    function addText() {
+      const editor = document.querySelector('.editor');
+      const newDiv = document.createElement('div');
+      newDiv.textContent = 'New Text Div';
+      newDiv.addEventListener('click', function () {
+        selectTextDiv(newDiv);
+      });
+      document.getElementById('textContainer').appendChild(newDiv);
+      saveEditorState(); // Save editor state after adding text
+    }
+
+    function deleteSelectedText() {
+      if (selectedTextDiv) {
+        document.getElementById('textContainer').removeChild(selectedTextDiv);
+        deletedDivs.push(selectedTextDiv); // Save deleted div to array
+        selectedTextDiv = null;
+      }
+    }
+
+    function undoLastAction() {
+      if (deletedDivs.length > 0) {
+        const lastDeleted = deletedDivs.pop();
+        document.getElementById('textContainer').appendChild(lastDeleted);
+        selectedTextDiv = lastDeleted;
+      }
+    }
+
+    function selectTextDiv(div) {
+      if (selectedTextDiv) {
+        selectedTextDiv.classList.remove('selected');
+      }
+      selectedTextDiv = div;
+      selectedTextDiv.classList.add('selected');
+    }
+
+    function saveEditorState() {
+      editorHistory.push(document.querySelector('.editor').innerHTML);
+    }
+
+    function getContrastingColor(hex) {
+      // Function to get contrasting color (black or white) for readability
+      const r = parseInt(hex.substring(1, 3), 16);
+      const g = parseInt(hex.substring(3, 5), 16);
+      const b = parseInt(hex.substring(5, 7), 16);
+      const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+      return (yiq >= 128) ? '#000000' : '#FFFFFF';
+    }
+  </script>
+</body>
+</html>
